@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 import cloudpickle
 
-import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split
+#import matplotlib.pyplot as plt
+#from sklearn.model_selection import train_test_split
 
 #Automcompletar rápido
 #%config IPCompleter.greedy=True
