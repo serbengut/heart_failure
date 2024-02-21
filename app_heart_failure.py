@@ -36,7 +36,8 @@ st.title('Heart Failure')
 
 
 ### vble 1:
-age = st.text_input('Edad:')
+age = st.number_input(label='Edad:',step=1.,format="%.0f")
+#age = int(age)
 
 ### vble 2:
 chest_pain_type = st.selectbox('Chest Pain Type', ['ATA', 'NAP', 'ASY','TA'])
@@ -54,7 +55,8 @@ fasting_bs = st.selectbox('Fasting blood sugar [1: if FastingBS > 120 mg/dl, 0: 
 max_hr = st.slider('Max heart rate', 80, 300)
 
 ### vble 7:
-oldpeak = st.slider('OldPeak', -2, 6)
+oldpeak = st.number_input(label='OldPeak', min_value=-2.0, max_value=6.0,step=0.1,format="%.2f")
+#oldpeak=float(oldpeak)
 
 ### vble 8:
 resting_bp = st.slider('Resting heart rate', 80, 200)
