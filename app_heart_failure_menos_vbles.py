@@ -79,13 +79,89 @@ registro = pd.DataFrame({'chest_pain_type':chest_pain_type,
 
 registro
 
-if st.sidebar.button('CALCULAR POSIBILIDAD DE FALLO CARDIACO'):
 
+coste_tto_preventivo = st.slider('Coste tto. preventivo', 500, 3000)
+coste_tto = st.slider('Coste tratamiento paciente enfermo a largo plazo: ', 3000, 100000)
+
+ITN_usu = 0
+IFP_usu = -coste_tto_preventivo
+IFN_usu = -coste_tto + coste_tto_preventivo
+ITP_usu = +coste_tto - coste_tto_preventivo
+
+############ CON ESTO FUNCIONA LA APP CON 4 VBLES ##########################################
+# if st.sidebar.button('CALCULAR POSIBILIDAD DE FALLO CARDIACO'):
+
+#     fallo = ejecutar_modelo(registro)
+
+#     fallo
+
+# else:
+#     st.write('DEFINE LOS PARÁMETROS Y HAZ CLICK EN CALCULAR POSIBILIDAD DE FALLO CARDIACO')
+############################################################################################
+
+def carga_x_y():
+    pred = np.loadtxt('pred_final.txt')
+    val_y_final = np.loadtxt('val_y_final_.txt')
+    return pred, val_y_final
+
+########################################################################################
+def max_roi_5(real,scoring, salida = 'grafico'):
+    
+   
+
+    #DEFINIMOS LA FUNCION DEL VALOR ESPERADO
+    def valor_esperado(matriz_conf):
+        TN, FP, FN, TP = conf.ravel()
+        VE = (TN * ITN_usu) + (FP * IFP_usu) + (FN * IFN_usu) + (TP * ITP_usu)
+        return(VE)
+    
+    #CREAMOS UNA LISTA PARA EL VALOR ESPERADO
+    ve_list = []
+    
+    #ITERAMOS CADA PUNTO DE CORTE Y RECOGEMOS SU VE
+    for umbral in np.arange(0,1,0.01):
+        predicho = np.where(scoring > umbral,1,0) 
+        conf = confusion_matrix(real,predicho)
+        ve_temp = valor_esperado(conf)
+        ve_list.append(tuple([umbral,ve_temp]))
+        
+    #DEVUELVE EL RESULTADO COMO GRAFICO O COMO EL UMBRAL ÓPTIMO
+    df_temp = pd.DataFrame(ve_list, columns = ['umbral', 'valor_esperado'])
+    if salida == 'grafico':
+#         solo_ve_positivo = df_temp[df_temp.valor_esperado > 0]
+#         plt.figure(figsize = (12,6))
+#         sns.lineplot(data = solo_ve_positivo, x = 'umbral', y = 'valor_esperado')
+#         plt.xticks(solo_ve_positivo.umbral, fontsize = 14)
+#         plt.yticks(solo_ve_positivo.valor_esperado, fontsize = 12);
+        
+        plt.figure(figsize = (12,6))
+        sns.lineplot(data = df_temp, x = 'umbral', y = 'valor_esperado')
+        plt.xticks(df_temp.umbral, fontsize = 14)
+        plt.yticks(df_temp.valor_esperado, fontsize = 12);
+    else:    
+        return(df_temp.iloc[df_temp.valor_esperado.idxmax(),0])
+    
+
+##### boton calcular prob fallo cardiaco: ##########################
+if st.sidebar.button('CALCULAR POSIBILIDAD DE FALLO CARDIACO y MAX ROI'):
     fallo = ejecutar_modelo(registro)
+    st.write(f'Probabilidad de fallo cardicaco: {round(100*fallo,2)}%')
 
-    fallo
+    pred, val_y_final = carga_x_y()
+
+    umbral_usu = max_roi_5(val_y_final, pred,salida = 'automatico')
+
+    st.write(f'El umbral para decidir si aplicar o no tratamiento preventivo es: {100*(umbral_usu)}%')
+
+    st.write(f'Como la probabilidad de que el paciente tenga fallo cardiaco es: {round(100*fallo,2)}%')
+
+    st.write('Desde el punto de vista del coste del tto. preventivo versus coste del tto. normal:')
+    if fallo > umbral_usu:
+        st.subheader('PACIENTE ELEGIBLE PARA HACER TRATAMIENTO PREVENTIVO')
+    else:
+        st.subheader('PACIENTE NO ELEGIBLE PARA HACER TRATAMIENTO PREVENTIVO')
+
+
 
 else:
     st.write('DEFINE LOS PARÁMETROS Y HAZ CLICK EN CALCULAR POSIBILIDAD DE FALLO CARDIACO')
-
-
